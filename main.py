@@ -60,10 +60,10 @@ class App():
             if sess_name == 'Default%20Settings': continue
             # SESS_PATH = f"{REG_PATH}\{sess_name}"
             tk.Grid.columnconfigure(frame, idx, weight=1)
-            print(sess_name)
+            sess_name = unquote(sess_name, encoding="cp949")
             btn = tk.Button(
                         frame,
-                        text=unquote(sess_name, encoding="cp949"), font=("Cascadia Code Light", 9),
+                        text=sess_name, font=("Cascadia Code Light", 9),
                         anchor="w",
                         bg="#28393a", fg="white",
                         cursor="hand2",
