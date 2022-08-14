@@ -8,7 +8,7 @@
 
 # build
 ```
-(.venv) PS > pip -r requitements_build.txt
+(.venv) PS > pip install -r requitements_build.txt
 (.venv) PS > python -m nuitka --plugin-enable=tk-inter --mingw64 --windows-disable-console --onefile main.py -o puttysession.exe
 ```
 
