@@ -5,6 +5,12 @@ from urllib.parse import unquote
 import json
 import os
 from typing import Dict
+import pystray
+from PIL import Image, ImageDraw
+
+
+__title = "SSH(PuTTY/KiTTY) Session Manager"
+__version = "0.1"
 
 
 class App():
@@ -12,23 +18,39 @@ class App():
     config_filename: str = "ssh_session_config.json"
     config: Dict = {}
     __NEW_HEIGHT = 0
+    __show = True
 
-    def __init__(self) -> None:
+    def __init__(self, title) -> None:
         self.load_config()
         self.root = tk.Tk()
-        self.root.title("SSH(PuTTY/KiTTY) Session Manager")
+        self.root.title(title)
         # root.eval("tk::PlaceWindow . center")
         self.root.geometry(self.config['geometry'])
         self.root.resizable(False, False)
         # https://stackoverflow.com/a/32289245
         self.root.bind("<Configure>", lambda event, tkapproot=self.root: self.onWindowConfig(event, tkapproot))
+        self.root.protocol("WM_DELETE_WINDOW", self.toggle)
         self.draw_frame()
 
     def run(self):
         self.root.mainloop()
 
-    def load_config(self):
+    def quit(self):
+        self.root.withdraw()  # hide
+        self.root.quit()
+        try:
+            self.root.destroy()
+        except RuntimeError as e:
+            print(e)
 
+    def toggle(self):
+        self.__show = not self.__show
+        if self.__show:
+            self.root.deiconify()
+        else:
+            self.root.withdraw()
+
+    def load_config(self):
         self.config = {}
         if not os.path.isfile(self.config_filename):
             self.make_config()
@@ -108,6 +130,42 @@ class App():
             self.__NEW_HEIGHT = this_height
 
 
+def create_image(width, height, color1, color2):
+    image = Image.new('RGB', (width, height), color1)
+    dc = ImageDraw.Draw(image)
+    dc.rectangle(
+        (width // 2, 0, width, height // 2),
+        fill=color2)
+    dc.rectangle(
+        (0, height // 2, width // 2, height),
+        fill=color2)
+
+    return image
+
+
+def on_clicked(icon, app):
+    icon.visible = False
+    icon.stop()
+    app.quit()
+
+
+def on_show(icon, app):
+    app.toggle()
+
+
 if __name__ == '__main__':
-    app = App()
+    app = App(__title)
+
+    icon = pystray.Icon(__title)
+    icon.icon = create_image(64, 64, 'black', 'white')
+
+    icon.menu = pystray.Menu(
+        pystray.MenuItem('Show', lambda: on_show(icon, app), default=True, visible=False),
+        pystray.MenuItem('Quit', lambda: on_clicked(icon, app))
+    )
+
+    icon.run_detached()
     app.run()
+
+    print('here again')
+    exit()
