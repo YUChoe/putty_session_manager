@@ -7,6 +7,7 @@ import os
 from typing import Dict
 import pystray
 from PIL import Image, ImageDraw
+from pynput import keyboard
 
 
 __title = "SSH(PuTTY/KiTTY) Session Manager"
@@ -105,7 +106,7 @@ class App():
             while True:
                 try:
                     name = winreg.EnumKey(registry_key, i)
-                    print(f"{REG_PATH}/{name}")
+                    # print(f"{REG_PATH}/{name}")
                     yield i, name
                     i += 1
                 except OSError as e:
@@ -114,7 +115,6 @@ class App():
                     break
 
     def run_session(self, event, session):
-        # kitty = r"C:\Users\yucho\Documents\apps\kitty-bin-0.76.0.8\kitty.exe"
         cmd = f'{self.config["putty"]} -load "{session}"'
         print(cmd)
         subprocess.Popen(cmd)  # detached
@@ -153,8 +153,34 @@ def on_show(icon, app):
     app.toggle()
 
 
+class GlobalHotkey():
+
+    def __init__(self, app):
+        self.app = app
+        self.hotkey = keyboard.HotKey(
+            keyboard.HotKey.parse('<cmd>+<alt>+x'),
+            self.on_activate
+        )
+        self.listener = keyboard.Listener(
+            on_press=self.for_canonical(self.hotkey.press),
+            on_release=self.for_canonical(self.hotkey.release)
+        )
+
+    def start(self):
+        self.listener.start()
+
+    def on_activate(self):
+        self.app.toggle()
+        print('Global hotkey activated!')
+
+    def for_canonical(self, f):
+        return lambda k: f(self.listener.canonical(k))
+
+
 if __name__ == '__main__':
     app = App(__title)
+
+    ghotkey = GlobalHotkey(app)
 
     icon = pystray.Icon(__title)
     icon.icon = create_image(64, 64, 'black', 'white')
@@ -164,8 +190,10 @@ if __name__ == '__main__':
         pystray.MenuItem('Quit', lambda: on_clicked(icon, app))
     )
 
+    ghotkey.start()
     icon.run_detached()
     app.run()
 
     print('here again')
     exit()
+
