@@ -48,6 +48,7 @@ class App():
         self.__show = not self.__show
         if self.__show:
             self.root.deiconify()
+            self.root.lift()
         else:
             self.root.withdraw()
 
@@ -111,7 +112,7 @@ class App():
                     i += 1
                 except OSError as e:
                     if e.errno != 22:
-                        print(e)
+                        print('Error:', e)
                     break
 
     def run_session(self, event, session):
@@ -171,7 +172,7 @@ class GlobalHotkey():
 
     def on_activate(self):
         self.app.toggle()
-        print('Global hotkey activated!')
+        # print('Global hotkey activated!')
 
     def for_canonical(self, f):
         return lambda k: f(self.listener.canonical(k))
@@ -194,6 +195,6 @@ if __name__ == '__main__':
     icon.run_detached()
     app.run()
 
-    print('here again')
+    print('quitting ...')
     exit()
 
